@@ -1,0 +1,67 @@
+<?php
+
+namespace Azrain\LaravelErrorLog;
+
+use Azrain\LaravelErrorLog\Transports\DatabaseTransport;
+use Azrain\LaravelErrorLog\Transports\HttpTransport;
+use Azrain\LaravelErrorLog\Transports\TransportInterface;
+use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Support\ServiceProvider;
+
+class LaravelErrorLogServiceProvider extends ServiceProvider
+{
+    public function register(): void
+    {
+        $this->mergeConfigFrom(__DIR__.'/../config/errorlog.php', 'errorlog');
+
+        $this->app->singleton(ErrorLog::class);
+
+        $this->app->bind(TransportInterface::class, function () {
+            if (config('errorlog.mode') === 'remote') {
+                return new HttpTransport(
+                    endpoint: config('errorlog.endpoint'),
+                    apiKey: config('errorlog.api_key'),
+                    timeout: (int) config('errorlog.timeout', 3),
+                );
+            }
+
+            return new DatabaseTransport;
+        });
+    }
+
+    public function boot(): void
+    {
+        $this->publishes([
+            __DIR__.'/../config/errorlog.php' => config_path('errorlog.php'),
+        ], 'errorlog-config');
+
+        $this->publishes([
+            __DIR__.'/../resources/views' => resource_path('views/vendor/errorlog'),
+        ], 'errorlog-views');
+
+        $this->publishes([
+            __DIR__.'/../database/migrations' => database_path('migrations'),
+        ], 'errorlog-migrations');
+
+        if (! config('errorlog.enabled', true)) {
+            return;
+        }
+
+        if (config('errorlog.mode') !== 'remote' && config('errorlog.dashboard.enabled', true)) {
+            $this->loadViewsFrom(__DIR__.'/../resources/views', 'errorlog');
+            $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+        }
+
+        if (config('errorlog.mode') !== 'remote') {
+            $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        }
+
+        $handler = $this->app->make(ExceptionHandler::class);
+
+        if (method_exists($handler, 'reportable')) {
+            $handler->reportable(function (\Throwable $e) {
+                $this->app->make(ErrorLog::class)->report($e);
+            });
+        }
+    }
+}
