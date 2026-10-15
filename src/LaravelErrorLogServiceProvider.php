@@ -2,6 +2,7 @@
 
 namespace Azrain\LaravelErrorLog;
 
+use Azrain\LaravelErrorLog\Http\Middleware\AuthorizeErrorLogDashboard;
 use Azrain\LaravelErrorLog\Transports\CompositeTransport;
 use Azrain\LaravelErrorLog\Transports\DatabaseTransport;
 use Azrain\LaravelErrorLog\Transports\HttpTransport;
@@ -54,6 +55,7 @@ class LaravelErrorLogServiceProvider extends ServiceProvider
         $storesLocally = config('errorlog.mode') !== 'remote'; // local + both
 
         if ($storesLocally && config('errorlog.dashboard.enabled', true)) {
+            $this->app['router']->aliasMiddleware('errorlog.auth', AuthorizeErrorLogDashboard::class);
             $this->loadViewsFrom(__DIR__.'/../resources/views', 'errorlog');
             $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
         }
