@@ -3,7 +3,7 @@
 return [
     'enabled' => env('ERRORLOG_ENABLED', true),
 
-    'mode' => env('ERRORLOG_MODE', 'local'), // local | remote | both
+    'mode' => env('ERRORLOG_MODE', 'remote'), // local | remote | both
 
     // Identifies this app to the monitoring server (e.g. 'mymanager' project code)
     'project_code' => env('ERRORLOG_PROJECT_CODE'),
