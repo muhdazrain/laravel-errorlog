@@ -10,13 +10,10 @@ class ErrorLogEvent extends Model
 
     protected $guarded = [];
 
-    protected function casts(): array
-    {
-        return [
-            'payload' => 'array',
-            'occurred_at' => 'datetime',
-            'line' => 'integer',
-            'user_id' => 'integer',
-        ];
-    }
+    protected $casts = [
+        'payload' => 'array',
+        'occurred_at' => 'datetime',
+        'line' => 'integer',
+        'user_id' => 'integer',
+    ];
 }
