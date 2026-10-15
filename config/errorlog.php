@@ -5,6 +5,9 @@ return [
 
     'mode' => env('ERRORLOG_MODE', 'local'), // local | remote | both
 
+    // Identifies this app to the monitoring server (e.g. 'mymanager' project code)
+    'project_code' => env('ERRORLOG_PROJECT_CODE'),
+
     // Remote mode only (also used by 'both')
     'endpoint' => env('ERRORLOG_ENDPOINT'),
     'api_key' => env('ERRORLOG_API_KEY'),

@@ -2,6 +2,7 @@
 
 namespace Azrain\LaravelErrorLog;
 
+use Azrain\LaravelErrorLog\Console\TestCommand;
 use Azrain\LaravelErrorLog\Http\Middleware\AuthorizeErrorLogDashboard;
 use Azrain\LaravelErrorLog\Transports\CompositeTransport;
 use Azrain\LaravelErrorLog\Transports\DatabaseTransport;
@@ -24,6 +25,7 @@ class LaravelErrorLogServiceProvider extends ServiceProvider
                 endpoint: config('errorlog.endpoint'),
                 apiKey: config('errorlog.api_key'),
                 timeout: (int) config('errorlog.timeout', 3),
+                projectCode: config('errorlog.project_code'),
             );
 
             return match (config('errorlog.mode')) {
@@ -47,6 +49,10 @@ class LaravelErrorLogServiceProvider extends ServiceProvider
         $this->publishes([
             __DIR__.'/../database/migrations' => database_path('migrations'),
         ], 'errorlog-migrations');
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([TestCommand::class]);
+        }
 
         if (! config('errorlog.enabled', true)) {
             return;

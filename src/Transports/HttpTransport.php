@@ -11,6 +11,7 @@ class HttpTransport implements TransportInterface
         protected ?string $endpoint,
         protected ?string $apiKey,
         protected int $timeout = 3,
+        protected ?string $projectCode = null,
     ) {}
 
     public function send(array $payload): void
@@ -27,6 +28,7 @@ class HttpTransport implements TransportInterface
                 'headers' => [
                     'Accept' => 'application/json',
                     'X-ErrorLog-Key' => (string) $this->apiKey,
+                    'X-ErrorLog-Project' => (string) $this->projectCode,
                 ],
                 'json' => $payload,
                 'http_errors' => false,

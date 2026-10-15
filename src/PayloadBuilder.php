@@ -29,6 +29,7 @@ class PayloadBuilder
             'ip' => $isHttp ? request()->ip() : null,
             'user_agent' => $isHttp ? request()->userAgent() : null,
             'user_id' => $isHttp ? auth()->id() : null,
+            'project_code' => config('errorlog.project_code'),
             'app_name' => config('app.name'),
             'environment' => config('app.env'),
             'php_version' => PHP_VERSION,
