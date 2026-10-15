@@ -2,6 +2,7 @@
 
 namespace Azrain\LaravelErrorLog;
 
+use Azrain\LaravelErrorLog\Transports\CompositeTransport;
 use Azrain\LaravelErrorLog\Transports\DatabaseTransport;
 use Azrain\LaravelErrorLog\Transports\HttpTransport;
 use Azrain\LaravelErrorLog\Transports\TransportInterface;
@@ -17,15 +18,18 @@ class LaravelErrorLogServiceProvider extends ServiceProvider
         $this->app->singleton(ErrorLog::class);
 
         $this->app->bind(TransportInterface::class, function () {
-            if (config('errorlog.mode') === 'remote') {
-                return new HttpTransport(
-                    endpoint: config('errorlog.endpoint'),
-                    apiKey: config('errorlog.api_key'),
-                    timeout: (int) config('errorlog.timeout', 3),
-                );
-            }
+            $local = fn () => new DatabaseTransport;
+            $remote = fn () => new HttpTransport(
+                endpoint: config('errorlog.endpoint'),
+                apiKey: config('errorlog.api_key'),
+                timeout: (int) config('errorlog.timeout', 3),
+            );
 
-            return new DatabaseTransport;
+            return match (config('errorlog.mode')) {
+                'remote' => $remote(),
+                'both' => new CompositeTransport([$local(), $remote()]),
+                default => $local(),
+            };
         });
     }
 
@@ -47,12 +51,14 @@ class LaravelErrorLogServiceProvider extends ServiceProvider
             return;
         }
 
-        if (config('errorlog.mode') !== 'remote' && config('errorlog.dashboard.enabled', true)) {
+        $storesLocally = config('errorlog.mode') !== 'remote'; // local + both
+
+        if ($storesLocally && config('errorlog.dashboard.enabled', true)) {
             $this->loadViewsFrom(__DIR__.'/../resources/views', 'errorlog');
             $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
         }
 
-        if (config('errorlog.mode') !== 'remote') {
+        if ($storesLocally) {
             $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         }
 

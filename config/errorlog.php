@@ -3,9 +3,9 @@
 return [
     'enabled' => env('ERRORLOG_ENABLED', true),
 
-    'mode' => env('ERRORLOG_MODE', 'local'), // local | remote
+    'mode' => env('ERRORLOG_MODE', 'local'), // local | remote | both
 
-    // Remote mode only
+    // Remote mode only (also used by 'both')
     'endpoint' => env('ERRORLOG_ENDPOINT'),
     'api_key' => env('ERRORLOG_API_KEY'),
     'timeout' => env('ERRORLOG_TIMEOUT', 3),
