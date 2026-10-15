@@ -23,7 +23,6 @@ return [
     'dashboard' => [
         'enabled' => env('ERRORLOG_DASHBOARD', true),
         'path' => env('ERRORLOG_DASHBOARD_PATH', 'errorlog-viewer'),
-        'guard' => env('ERRORLOG_DASHBOARD_GUARD'), // e.g. 'admin' — null = default guard; guests get a 404
         'layout' => env('ERRORLOG_DASHBOARD_LAYOUT'), // e.g. 'layouts.app' — null = standalone bundled CSS
         'custom_css' => env('ERRORLOG_DASHBOARD_CSS'), // e.g. '/css/errorlog.css' — injected as <link>
     ],

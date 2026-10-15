@@ -11,17 +11,21 @@ class AuthorizeErrorLogDashboard
 {
     /**
      * Abort with the configured status (default 404) when the visitor is not
-     * authenticated on the given (or configured/default) guard. Unlike the
-     * `auth` middleware this never redirects to a login route.
+     * authenticated. Unlike the `auth` middleware this never redirects to a
+     * login route. Without a configured guard, any logged-in guard passes.
      */
     public function handle(Request $request, Closure $next, ?string $guard = null): Response
     {
-        $guard ??= config('errorlog.dashboard.guard');
+        $guards = $guard ?? config('errorlog.dashboard.guard');
 
-        if (! Auth::guard($guard)->check()) {
-            abort((int) config('errorlog.dashboard.unauthorized_status', 404));
+        $guards = $guards ? (array) $guards : array_keys(config('auth.guards', []));
+
+        foreach ($guards as $guard) {
+            if (Auth::guard($guard)->check()) {
+                return $next($request);
+            }
         }
 
-        return $next($request);
+        abort((int) config('errorlog.dashboard.unauthorized_status', 404));
     }
 }
