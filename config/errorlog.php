@@ -13,15 +13,6 @@ return [
     'api_key' => env('ERRORLOG_API_KEY'),
     'timeout' => env('ERRORLOG_TIMEOUT', 3),
 
-    // Exception classes that are never reported
-    'ignore' => [
-        Illuminate\Validation\ValidationException::class,
-        Illuminate\Auth\AuthenticationException::class,
-        Illuminate\Auth\Access\AuthorizationException::class,
-        Illuminate\Session\TokenMismatchException::class,
-        Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class,
-    ],
-
     // Local mode dashboard
     'dashboard' => [
         'enabled' => env('ERRORLOG_DASHBOARD', true),
