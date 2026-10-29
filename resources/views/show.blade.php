@@ -23,6 +23,10 @@
                 <dd>{{ optional($group->occurred_at)->toDateTimeString() }}</dd>
                 <dt>URL</dt>
                 <dd>{{ $group->payload['method'] ?? '' }} {{ $group->payload['url'] ?? '—' }}</dd>
+                @if(! empty($group->payload['input']))
+                    <dt>Input</dt>
+                    <dd><pre style="margin:0;white-space:pre-wrap;word-break:break-all">{{ json_encode($group->payload['input'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) }}</pre></dd>
+                @endif
                 <dt>Environment</dt>
                 <dd>{{ $group->environment ?? '—' }} &middot; PHP {{ $group->payload['php_version'] ?? '?' }} &middot; Laravel {{ $group->payload['laravel_version'] ?? '?' }}</dd>
                 <dt>User</dt>

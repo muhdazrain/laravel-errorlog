@@ -28,6 +28,7 @@ class PayloadBuilder
             'method' => $isHttp ? request()->method() : null,
             'ip' => $isHttp ? request()->ip() : null,
             'user_agent' => $isHttp ? request()->userAgent() : null,
+            'input' => $isHttp ? $this->resolveInput() : null,
             'user_id' => $isHttp ? auth()->id() : null,
             'project_code' => config('errorlog.project_code'),
             'app_name' => config('app.name'),
@@ -36,6 +37,64 @@ class PayloadBuilder
             'laravel_version' => app()->version(),
             'occurred_at' => now()->toIso8601String(),
         ];
+    }
+
+    /**
+     * Request input (POST/JSON body, query string excluded) with sensitive values redacted.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function resolveInput(): ?array
+    {
+        $request = request();
+
+        if (! config('errorlog.capture_input', true) || $request->isMethodSafe()) {
+            return null;
+        }
+
+        $input = $request->request->all() + $request->json()->all();
+
+        if ($request->headers->has('X-Livewire')) {
+            $input = ['livewire' => collect($input['components'] ?? [])->map(fn ($c): array => [
+                'calls' => $c['calls'] ?? [],
+                'updates' => $c['updates'] ?? [],
+            ])->all()];
+        }
+
+        $input = $this->sanitize($input);
+
+        return $input === [] ? null : $input;
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $data
+     * @return array<array-key, mixed>
+     */
+    private function sanitize(array $data, int $depth = 0): array
+    {
+        $redact = array_map('strtolower', config('errorlog.redact', []));
+        $max = (int) config('errorlog.input_max_length', 1000);
+        $clean = [];
+
+        foreach (array_slice($data, 0, 100, true) as $key => $value) {
+            $lower = strtolower((string) $key);
+
+            if (array_filter($redact, fn (string $r): bool => $r !== '' && str_contains($lower, $r))) {
+                $clean[$key] = '***';
+            } elseif (is_array($value)) {
+                $clean[$key] = $depth >= 5 ? '[max depth]' : $this->sanitize($value, $depth + 1);
+            } elseif ($value instanceof \Symfony\Component\HttpFoundation\File\UploadedFile) {
+                $clean[$key] = '[file: '.$value->getClientOriginalName().']';
+            } elseif (is_string($value) && mb_strlen($value) > $max) {
+                $clean[$key] = mb_substr($value, 0, $max).'… [truncated]';
+            } elseif (is_scalar($value) || $value === null) {
+                $clean[$key] = $value;
+            } else {
+                $clean[$key] = '['.get_debug_type($value).']';
+            }
+        }
+
+        return $clean;
     }
 
     /**
